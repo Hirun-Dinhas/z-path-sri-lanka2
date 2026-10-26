@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Z-Path Sri Lanka · A/L Z-Score Calculator</title>
+<style>
+:root{--bg:#061225;--bg2:#0B1B35;--cy:#42D9FF;--bl:#729CFF;--tx:#F5F8FF;--mu:#9FB1CF;--glass:rgba(114,156,255,.09);--line:rgba(66,217,255,.28);--err:#ff8fa3;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;color:var(--tx);font:16px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:radial-gradient(900px 500px at 85% -10%,rgba(66,217,255,.14),transparent 60%),radial-gradient(800px 600px at -10% 30%,rgba(114,156,255,.13),transparent 60%),linear-gradient(180deg,var(--bg),var(--bg2));background-color:var(--bg);min-height:100vh}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px}
+header.hero{padding:72px 0 40px;text-align:left}
+h1{font-size:clamp(2.4rem,7vw,4rem);line-height:1.05;margin:0 0 8px;letter-spacing:-.02em}
+.sub{font-size:1.25rem;color:var(--cy);margin:0 0 6px}
+.tag{color:var(--mu);margin:0 0 28px;font-size:1.05rem}
+.btn{appearance:none;border:1px solid var(--cy);background:linear-gradient(135deg,rgba(66,217,255,.25),rgba(114,156,255,.2));color:var(--tx);font:inherit;font-weight:600;padding:13px 26px;border-radius:14px;cursor:pointer;text-decoration:none;display:inline-block;transition:transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(66,217,255,.2)}
+.btn.ghost{background:transparent;border-color:var(--line)}
+:focus-visible{outline:2px solid var(--cy);outline-offset:3px}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:24px;margin-bottom:18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.card h2{margin:0 0 14px;font-size:1.2rem}
+.card h2 span{color:var(--cy);margin-right:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:760px){.row{grid-template-columns:1fr 1fr 1fr}.row>div:first-child{grid-column:1/-1}}
+@media(max-width:640px){.grid{grid-template-columns:1fr}header.hero{padding-top:48px}}
+@media(max-width:520px){.wrap{padding:0 14px}header.hero{padding:36px 0 24px}.card{padding:18px;border-radius:16px}.row{grid-template-columns:1fr 1fr}.row>div:nth-child(-n+2){grid-column:1/-1}.btn{width:100%;text-align:center}.actions .btn{flex:1 1 100%}.res>div:first-child{flex:1 1 100%}.z{font-size:1.7rem}.sub{font-size:1.1rem}}
+label{display:block;font-size:.9rem;color:var(--mu);margin-bottom:5px}
+select,input,textarea{width:100%;min-height:46px;background:rgba(6,18,37,.7);color:var(--tx);border:1px solid rgba(114,156,255,.35);border-radius:12px;padding:11px 12px;font:inherit}
+select:focus,input:focus,textarea:focus{border-color:var(--cy)}
+.err{color:var(--err);font-size:.85rem;min-height:1.2em;margin-top:4px}
+.notice{border-left:3px solid var(--bl);padding:10px 14px;background:rgba(114,156,255,.08);border-radius:0 12px 12px 0;color:var(--mu);font-size:.93rem}
+.notice.warn{border-color:#ffc46b}
+.res{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:baseline;padding:14px 0;border-bottom:1px solid rgba(114,156,255,.18)}
+.res:last-child{border:0}
+.z{font-size:2rem;font-weight:700;color:var(--cy);white-space:nowrap}
+.z.na{font-size:1rem;color:#ffc46b;font-weight:600}
+.meaning{color:var(--mu);font-size:.92rem;margin:2px 0 0}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--cy);border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:8px}
+@keyframes s{to{transform:rotate(360deg)}}
+details summary{cursor:pointer;color:var(--bl)}
+.ai-intro{color:var(--mu);margin-top:-4px}.ai-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}.ai-fields .wide{grid-column:1/-1}.ai-output{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75}.ai-status{min-height:1.4em;color:var(--mu);font-size:.92rem}.ai-status.error{color:var(--err)}.ai-small{font-size:.86rem;color:var(--mu)}
+@media(max-width:640px){.ai-fields{grid-template-columns:1fr}.ai-fields .wide{grid-column:auto}}
+
+textarea{min-height:130px;font:13px/1.4 ui-monospace,Consolas,monospace;margin-top:10px}
+footer{color:var(--mu);font-size:.85rem;padding:24px 0 48px;border-top:1px solid rgba(114,156,255,.18)}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media print{body{background:#fff;color:#000}.card{background:#fff;border-color:#999;box-shadow:none;backdrop-filter:none}.z,.sub{color:#003a66}.meaning,.tag,footer,label{color:#333}.no-print{display:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero no-print">
+  <h1>Z-Path Sri Lanka</h1>
+  <p class="sub">A/L Z-Score Calculator</p>
+  <p class="tag">Calculate Your Score. Discover Your Path.</p>
+</header>
+
+<main>
+<form id="form" class="no-print" novalidate>
+  <section class="card">
+    <h2><span>1</span>Your stream and district</h2>
+    <div class="grid">
+      <div><label for="stream">A/L stream</label><select id="stream"></select><div class="err" id="e-stream"></div></div>
+      <div><label for="district">District</label><select id="district"></select><div class="err" id="e-district"></div></div>
+    </div>
+  </section>
+  <section class="card">
+    <h2><span>2</span>Your three subjects</h2>
+    <div id="subjects"></div>
+    <div class="notice">Marks must be between 0 and 100. Each subject can be chosen once. Enter the mean (μ) and standard deviation (σ) for each subject from your own source.</div>
+  </section>
+  <section class="card">
+    <h2><span>3</span>Calculate</h2>
+    <button class="btn" type="submit" id="go">Calculate My Z-Score</button>
+  </section>
+</form>
+
+<section id="results" class="card" hidden aria-live="polite"></section>
+
+<section id="advisor" class="card" hidden aria-live="polite">
+  <h2><span>✦</span>Z-Path AI University & Career Advisor</h2>
+  <p class="ai-intro">Get ideas for courses and career paths based on your A/L stream, subjects, marks, district and interests. The AI gives guidance—not an admission decision.</p>
+  <div class="ai-fields">
+    <div><label for="interest">Subjects or fields you enjoy (optional)</label><input id="interest" maxlength="250" placeholder="e.g. technology, business, biology"></div>
+    <div><label for="careerGoal">Career interests (optional)</label><input id="careerGoal" maxlength="250" placeholder="e.g. engineering, teaching, finance"></div>
+    <div class="wide"><label for="priorities">What matters most to you? (optional)</label><textarea id="priorities" maxlength="700" placeholder="e.g. job opportunities in Sri Lanka, studying abroad, course length, public university"></textarea></div>
+  </div>
+  <p class="ai-small">Please do not enter your name, address, phone number, school name or other private information.</p>
+  <button class="btn" type="button" id="askAdvisor">Get My Course & Career Guidance</button>
+  <p id="aiStatus" class="ai-status" role="status"></p>
+  <div id="aiAnswer" class="ai-output" hidden></div>
+  <div class="notice warn" style="margin-top:14px">Important: this site does not yet contain a verified official UGC admissions dataset. AI suggestions are exploratory only. Confirm current course requirements, cut-off Z-scores and district rules using the latest official UGC handbook and university sources before making decisions. The calculator's simple average is not the official UGC Z-score.</div>
+</section>
+
+</main>
+
+<footer>
+  This is an informational calculator. It is not an official examination result service unless formally authorized. Subject Z-scores calculated here are not official university admission Z-scores, and they cannot show your eligibility, admission chances or district quota position.
+</footer>
+</div>
+
+<script>
+/* ===== 1. DATA (edit here) ===== */
+// Fill only with verified official figures. Shape: stats[stream][subject] = {mean, sd}
+var DATA = { year: null, source: "", stats: {} };
+
+var STREAMS = {
+  "Physical Science": ["Combined Mathematics","Physics","Chemistry","Information & Communication Technology"],
+  "Biological Science": ["Biology","Physics","Chemistry","Agricultural Science"],
+  "Commerce": ["Accounting","Business Studies","Economics","Business Statistics","Information & Communication Technology"],
+  "Arts": ["Economics","Geography","History","Political Science","Logic & Scientific Method","Buddhism","Sinhala","Tamil","English","Mathematics","Home Economics","Media Studies","Information & Communication Technology"],
+  "Technology": ["Science for Technology","Engineering Technology","Bio-systems Technology","Information & Communication Technology"]
+};
+var DISTRICTS = ["Colombo","Gampaha","Kalutara","Kandy","Matale","Nuwara Eliya","Galle","Matara","Hambantota","Jaffna","Kilinochchi","Mannar","Vavuniya","Mullaitivu","Batticaloa","Ampara","Trincomalee","Kurunegala","Puttalam","Anuradhapura","Polonnaruwa","Badulla","Monaragala","Ratnapura","Kegalle"];
+
+/* ===== 2. CALCULATION LOGIC ===== */
+var DP = 4; // Z-scores are rounded half away from zero to 4 decimal places
+function getStats(stream, subject){
+  var s = DATA.stats && DATA.stats[stream] && DATA.stats[stream][subject];
+  if(!s || typeof s.mean!=="number" || typeof s.sd!=="number" || !isFinite(s.mean) || !isFinite(s.sd) || s.sd<=0) return null;
+  return s;
+}
+function zScore(x, mean, sd){
+  var z = (x - mean) / sd, f = Math.pow(10, DP);
+  return (z<0 ? -1 : 1) * Math.round(Math.abs(z)*f) / f;
+}
+function describe(z){
+  var a = Math.abs(z).toFixed(2);
+  if(Math.abs(z) < 0.05) return "Right at the average.";
+  return a + " standard deviations " + (z>0 ? "above" : "below") + " the average you entered.";
+}
+
+/* ===== 3. UI ===== */
+var $ = function(id){return document.getElementById(id)};
+function opts(sel, list, ph){
+  sel.innerHTML = '<option value="">' + ph + '</option>' + list.map(function(v){return '<option>'+v+'</option>'}).join("");
+}
+opts($("stream"), Object.keys(STREAMS), "Select your stream");
+opts($("district"), DISTRICTS, "Select your district");
+
+var sb = "";
+for(var i=1;i<=3;i++){
+  sb += '<div class="row"><div><label for="sub'+i+'">Subject '+i+'</label><select id="sub'+i+'" class="sub"></select><div class="err" id="e-sub'+i+'"></div></div>' +
+        '<div><label for="m'+i+'">Marks (0–100)</label><input id="m'+i+'" type="number" inputmode="decimal" min="0" max="100" step="any"><div class="err" id="e-m'+i+'"></div></div>' +
+        '<div><label for="mu'+i+'">Mean (μ)</label><input id="mu'+i+'" type="number" inputmode="decimal" step="any"><div class="err" id="e-mu'+i+'"></div></div>' +
+        '<div><label for="sd'+i+'">Std. dev. (σ)</label><input id="sd'+i+'" type="number" inputmode="decimal" step="any"><div class="err" id="e-sd'+i+'"></div></div></div>';
+}
+$("subjects").innerHTML = sb;
+
+function refreshSubjects(){
+  var st = $("stream").value, list = STREAMS[st] || [];
+  var chosen = [1,2,3].map(function(i){return $("sub"+i).value});
+  [1,2,3].forEach(function(i){
+    var sel = $("sub"+i), cur = sel.value;
+    opts(sel, list, st ? "Select subject" : "Choose a stream first");
+    sel.disabled = !st;
+    if(list.indexOf(cur)>-1) sel.value = cur;
+    Array.prototype.forEach.call(sel.options, function(o){
+      o.disabled = o.value && o.value!==sel.value && [1,2,3].some(function(j){return j!==i && $("sub"+j).value===o.value});
+    });
+  });
+}
+function syncDup(){
+  [1,2,3].forEach(function(i){
+    var sel=$("sub"+i);
+    Array.prototype.forEach.call(sel.options,function(o){
+      o.disabled = o.value && o.value!==sel.value && [1,2,3].some(function(j){return j!==i && $("sub"+j).value===o.value});
+    });
+  });
+}
+$("stream").addEventListener("change", function(){ [1,2,3].forEach(function(i){$("sub"+i).value=""}); refreshSubjects(); });
+document.querySelectorAll(".sub").forEach(function(s){s.addEventListener("change",syncDup)});
+refreshSubjects();
+
+function setErr(id,msg){ $(id).textContent = msg||""; return !msg; }
+function validate(){
+  var ok = true, seen = {};
+  ok = setErr("e-stream", $("stream").value ? "" : "Select your A/L stream.") && ok;
+  ok = setErr("e-district", $("district").value ? "" : "Select your district.") && ok;
+  [1,2,3].forEach(function(i){
+    var s = $("sub"+i).value, m = $("m"+i).value.trim(), msg = "";
+    if(!s) msg = "Select a subject."; else if(seen[s]) msg = "This subject is already selected."; else seen[s] = 1;
+    ok = setErr("e-sub"+i, msg) && ok;
+    msg = "";
+    if(m==="") msg = "Enter your marks.";
+    else if(isNaN(Number(m))) msg = "Marks must be a number.";
+    else if(Number(m)<0 || Number(m)>100) msg = "Marks must be between 0 and 100.";
+    ok = setErr("e-m"+i, msg) && ok;
+    var mu = $("mu"+i).value.trim(), sd = $("sd"+i).value.trim();
+    ok = setErr("e-mu"+i, mu==="" ? "Enter the mean." : isNaN(Number(mu)) ? "Mean must be a number." : "") && ok;
+    ok = setErr("e-sd"+i, sd==="" ? "Enter the std. dev." : (isNaN(Number(sd)) || Number(sd)<=0) ? "Must be greater than 0." : "") && ok;
+  });
+  return ok;
+}
+
+$("form").addEventListener("submit", function(ev){
+  ev.preventDefault();
+  if(!validate()){ var f=document.querySelector(".err:not(:empty)"); if(f) f.scrollIntoView({block:"center"}); return; }
+  var btn = $("go"); btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Calculating';
+  setTimeout(function(){ render(); btn.disabled = false; btn.textContent = "Calculate My Z-Score"; }, 350);
+});
+
+function esc(t){ return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]}); }
+function render(){
+  var st = $("stream").value, dist = $("district").value, any = false, rows = "", zs = [];
+  [1,2,3].forEach(function(i){
+    var sj = $("sub"+i).value, x = Number($("m"+i).value), s = {mean:Number($("mu"+i).value), sd:Number($("sd"+i).value)}, z, body;
+    if(s){ any = true; z = (x - s.mean) / s.sd; zs.push(z);
+      body = '';
+      var note = "";
+    } else {
+      body = '<div class="z na">Unavailable</div>';
+      var note = "No verified mean and standard deviation is configured for this subject, so no Z-score is shown.";
+    }
+    rows += '<div class="res"><div><strong>' + esc(sj) + '</strong> · ' + x + ' marks (μ = ' + s.mean + ', σ = ' + s.sd + ')<p class="meaning">' + note + '</p></div>' + body + '</div>';
+  });
+  var avgZ = zScore(zs.reduce(function(a,b){return a+b},0) / zs.length, 0, 1);
+  var r = $("results");
+  r.innerHTML = '<h2>Your results</h2><p class="meaning">Stream: <strong>' + esc(st) + '</strong> · District: <strong>' + esc(dist) + '</strong>' +
+    '' + '</p>' + rows + '<div class="res"><div><strong>Your Z-score</strong><p class="meaning">' + describe(avgZ) + ' This is the average of your three subject Z-scores, rounded to ' + DP + ' decimal places.</p></div><div class="z">' + (avgZ>0?"+":"") + avgZ.toFixed(DP) + '</div></div>' +
+    '<div class="notice' + (any ? '' : ' warn') + '">' + (any
+      ? 'A positive Z-score means your mark is above the island average for that subject; a negative one means below. Values are rounded to ' + DP + ' decimal places (half away from zero) and only at the final step.'
+      : 'Z-scores will appear here once verified official data is added to the site’s code.') + '</div>' +
+    '<div class="notice" style="margin-top:10px">The Z-score above is a simple average of your three subject Z-scores. The official UGC Z-score uses a different method, so this is not an official or university admission Z-score.</div>' +
+    '<div class="actions no-print"><button class="btn" type="button" id="print">Print or save as PDF</button><button class="btn ghost" type="button" id="reset">Calculate again</button></div>';
+  r.hidden = false;
+  $("advisor").hidden = false;
+  window.zPathStudentData = {
+    stream: st, district: dist,
+    subjects: [1,2,3].map(function(i){ return {name: $("sub"+i).value, marks: Number($("m"+i).value)}; }),
+    personalEstimate: avgZ,
+    personalEstimateNote: "Simple average of three individually calculated subject Z-scores using user-entered mean and standard deviation. This is NOT the official UGC admission Z-score and must not be used to determine eligibility."
+  };
+  r.scrollIntoView({behavior:"smooth", block:"start"});
+  $("print").onclick = function(){ window.print(); };
+  $("reset").onclick = function(){
+    $("form").reset(); refreshSubjects(); r.hidden = true;
+    document.querySelectorAll(".err").forEach(function(e){ e.textContent=""; });
+    $("form").scrollIntoView({behavior:"smooth"});
+  };
+}
+
+$("askAdvisor").addEventListener("click", async function(){
+  var btn = $("askAdvisor"), status = $("aiStatus"), answer = $("aiAnswer");
+  if(!window.zPathStudentData){ status.textContent = "Calculate your subject results first."; status.className = "ai-status error"; return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Preparing your guidance';
+  status.className = "ai-status"; status.textContent = "Connecting securely to the AI advisor…";
+  answer.hidden = true; answer.textContent = "";
+  try {
+    var response = await fetch("/.netlify/functions/ai-advisor", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        student: window.zPathStudentData,
+        interests: $("interest").value.trim(),
+        careerGoals: $("careerGoal").value.trim(),
+        priorities: $("priorities").value.trim()
+      })
+    });
+    var data = await response.json().catch(function(){ return {}; });
+    if(!response.ok) throw new Error(data.error || "The advisor is not configured yet. Check the setup guide.");
+    answer.textContent = data.answer || "No guidance was returned. Please try again.";
+    answer.hidden = false; status.textContent = "Guidance generated. Verify admissions details with official sources.";
+  } catch(err) {
+    status.className = "ai-status error";
+    status.textContent = err.message || "Could not connect. Please check your internet and Netlify setup.";
+  } finally {
+    btn.disabled = false; btn.textContent = "Get My Course & Career Guidance";
+  }
+});
+</script>
+</body>
+</html>
